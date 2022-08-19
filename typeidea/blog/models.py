@@ -27,8 +27,26 @@ class Category(models.Model):
     class Meta:
         verbose_name = verbose_name_plural = "分类"
         
+    @classmethod
+    def get_navs(cls):
+        categories = cls.objects.filter(status=cls.STATUS_NORMAL)
+        nav_categories = []
+        normal_categories = []
+        for cate in categories:
+            if cate.is_nav:
+                nav_categories.append(cate)
+            else:
+                normal_categories.append(cate)
+           
+        # * 下面注释掉的代码会产生两次数据库的I/O， 已经优化为当前的代码     
+        # nav_categories = categories.filter(is_nav = True)
+        # normal_categories = categories.filter(is_nav = False)
+        
+        return {
+            'navs': nav_categories,
+            'categories': normal_categories,
+        }
     
-
 class Tag(models.Model):
     
     def __str__(self):
@@ -62,6 +80,9 @@ class Post(models.Model):
         (STATUS_DELETE, '删除'),
         (STATUS_DRAFE, '草稿'),
     )
+    
+    pv = models.PositiveIntegerField(default=1)
+    uv = models.PositiveIntegerField(default=1)
     
     title = models.CharField(max_length=225, verbose_name="标题")
     desc = models.CharField(max_length=1024, blank=True, verbose_name="摘要")
@@ -104,3 +125,8 @@ class Post(models.Model):
     @classmethod
     def latest_posts(cls):
         queryset = cls.objects.filter(status=cls.STATUS_NORMAL)
+        return queryset
+        
+    @classmethod
+    def hot_posts(cls):
+        return cls.objects.filter(status=cls.STATUS_NORMAL).order_by('-pv')
