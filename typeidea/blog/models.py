@@ -26,6 +26,8 @@ class Category(models.Model):
     
     class Meta:
         verbose_name = verbose_name_plural = "分类"
+        
+    
 
 class Tag(models.Model):
     
@@ -73,3 +75,32 @@ class Post(models.Model):
     class Meta:
         verbose_name = verbose_name_plural = "文章"
         ordering = ['-id']
+        
+    @staticmethod
+    def get_by_tag(tag_id):
+        try:
+            tag = Tag.objects.get(id=tag_id)
+        except Tag.DoesNotExist:
+            tag = None
+            post_list = []
+        else:
+            post_list = tag.post_set.filter(status = Post.STATUS_NORMAL).select_related('owner', 'category')
+            
+        return post_list, tag
+    
+    @staticmethod
+    def get_by_category(category_id):
+        try:
+            category = Category.objects.get(id = category_id)
+        except:
+            category = None
+            post_list = None
+        else:
+            # select_realated 用来解决外键查询的N+1问题，使得template只需要一次查询数据库即可
+            post_list = category.post_set.filter(status=Post.STATUS_NORMAL).select_related('owner', 'category')
+            
+        return post_list, category
+    
+    @classmethod
+    def latest_posts(cls):
+        queryset = cls.objects.filter(status=cls.STATUS_NORMAL)
