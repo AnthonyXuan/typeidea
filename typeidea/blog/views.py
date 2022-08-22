@@ -1,10 +1,16 @@
 
+from ast import keyword
+from multiprocessing import context
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.views.generic import ListView, DetailView
+from django.db.models import Q
 
 from config.models import SideBar
+from comment.models import Comment
+from comment.forms import CommentForm
 from .models import Category, Tag, Post
+
 
 # Create your views here.
 
@@ -69,7 +75,19 @@ class PostDetailView(CommonViewMixin, DetailView):
     # 设置p(rimary)k(ey)为'post_id'(如果不设置的话，默认查找关键字为'pk').此外，DetailView还有一种查找数据的方式是通过slug查找，对应的设置slug的变量为 slug_url_kwags(如果不设置的话，默认查找关键字为'slug')
     pk_url_kwarg = 'post_id'
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'comment_list': Comment.get_by_target(self.request.path),
+            'comment_form': CommentForm,
+        })
+        # print('req path:',self.request.path)
+        # print('req all:',self.request)
+        return context
+    
 class IndexView(CommonViewMixin, ListView):
+    # 此处queryset有着所有的文章
+    # 后面集成IndexView的类，根据各自的需求对此queryset进行过滤
     queryset = Post.latest_posts()
     paginate_by = 5
     context_object_name = 'post_list'
@@ -107,3 +125,32 @@ class TagView(IndexView):
             'tag': tag,
         })
         return context
+    
+class SearchView(IndexView):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # ! 注意区别下面这两个语句的不同
+        # ! 下面的语句从kwargs字典中取出‘keyword’，能取出的前提是使用了path()匹配提供关键字的语法（eg: <int:category>）
+        # keyword = self.kwargs.get('keyword')
+        # ! 下面这个语句获取GET请求的参数, 如通过按钮得到的返回参数
+        keyword = self.request.GET.get('keyword')
+        print("kwargs:",self.kwargs)
+        print('GET:',self.request.GET)
+        
+        if not keyword:
+            return queryset
+        return queryset.filter(Q(title__icontains=keyword) | Q(desc__icontains=keyword))
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'keyword': self.request.GET.get('keyword')
+        })
+        return context
+    
+class AuthorView(IndexView):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        author_id = self.kwargs.get('owner_id')
+        return queryset.filter(owner_id=author_id)     
+    

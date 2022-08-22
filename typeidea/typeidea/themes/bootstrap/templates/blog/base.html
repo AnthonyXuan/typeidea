@@ -34,36 +34,48 @@
                         </li>
                         {% endfor %}
                     </ul>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    <form class="d-flex" role="search" action="/search/" method="GET">
+                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="keyword" value="{{ keyword }}">
+                        <button class="btn btn-outline-success" type="submit">搜索</button>
                     </form>
                 </div>
             </div>
         </nav>
+        <div class="jumbotron">
+            <h1 class="display-3">Typeidea</h1>
+            <p class="lead">基于Django的多人博客系统</p>
+        </div>
     </div>
-    <hr>
-
-    <!--定义了main块，负责页面主内容的显示-->>
-    {% block main %}
-    {% endblock %}
-
-    <hr>
-    <div>
-        底部分类：
-        {% for cate in categories %}
-        <a href="{% url 'category-list' cate.id %}">{{ cate.name }}</a>
-        {% endfor %}
+    <div class="container">
+        <div class="row">
+            <div class="col-9 post-list" >
+            <!--定义了main块，负责页面主内容的显示-->>
+            {% block main %}
+            {% endblock %}
+            </div>
+            <div class="col-3">
+                {% block sidebar %}
+                    {% for sidebar in sidebars %}
+                    <h4>{{ sidebar.title }}</h4>
+                    {{ sidebar.content_html }}
+                    {% endfor %}
+                {% endblock %}
+            </div>
+        </div>
     </div>
 
-    <hr>
-    <div>
-        侧边栏展示：
-        {% for sidebar in sidebars %}
-        <h4>{{ sidebar.title }}</h4>
-        {{ sidebar.content_html }}
-        {% endfor %}
-    </div>
+    <footer class="footer">
+        {% block footer %}
+        <div class="container">
+            <hr>
+            <nav class="nav category">
+                {% for cate in categories %}
+                <a href="{% url 'category-list' cate.id %}">{{ cate.name }}</a>
+                {% endfor %}
+            </nav>
+        </div>
+        {% endblock %}
+    </footer>
 </body>
 
 </html>

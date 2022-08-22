@@ -13,16 +13,32 @@
 
     <p>{{ post.content }}</p>
     {% endif %}
+
+    <hr>
+    <div class="comment">
+        <form class="form-group" action="/comment/" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="target" value="{{ request.path }}">
+            <!-- comment_form 包括CommentForm里定义的nickname、email、content等一系列输入 -->
+            {{ comment_form }}
+            <input type="submit" value="提交">
+        </form>
+
+        <!-- 评论列表 -->
+        <ul class="list-group">
+            {% for comment in comment_list %}
+            <li class="list-group-item">
+                <div class="nickname">
+                    <a href="{{ comment.website }}">{{ comment.nickname }}</a>
+                    <span>{{ comment.created_time }}</span>
+                </div>
+                <div class="comment-content">
+                    {{ comment.content }}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+    </div>
+
 {% endblock %}
-
-<!-- {% if post %}
-<h1>{{ post.title }}</h1>
-<div>
-    <span>作者:{{ post.owner.username }}</span>
-    <span>分类:{{ post.category.name }}</span>
-</div>
-
-<hr>
-
-<p>{{ post.content }}</p>
-{% endif %} -->

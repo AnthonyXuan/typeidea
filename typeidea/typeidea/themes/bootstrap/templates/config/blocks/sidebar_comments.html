@@ -9,6 +9,7 @@
 <body>
     <ul>
         {% for comment in comments %}
+        <!-- Legacy code down here -->
         <li><a href="{% url 'post-detail' comment.target_id %}">{{ comment.target.title }}</a>
         {{ comment.nickname }} : {{ comment.content }}
         </li>
